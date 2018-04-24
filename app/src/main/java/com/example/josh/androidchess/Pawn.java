@@ -5,7 +5,6 @@ import java.util.List;
 
 /**
  * @author Joshua Li, Dingbang Chen
- *
  */
 public class Pawn extends Piece {
 
@@ -13,9 +12,8 @@ public class Pawn extends Piece {
 
     /**
      * sets offset, the direction to move according to Pawn's color
-     * 
-     * @param color
-     *            color of piece
+     *
+     * @param color color of piece
      */
     public Pawn(char color) {
         super(color);
@@ -35,13 +33,12 @@ public class Pawn extends Piece {
         if (outOfBounds(row, col) || board[row][col] == null)
             return moves;
 
-        if (!outOfBounds(row + offset, col) && board[row + offset][col] == null)
-        {
+        if (!outOfBounds(row + offset, col) && board[row + offset][col] == null) {
             moves.add(toPosition(row + offset, col));
-        if (isFirstMove && !outOfBounds(row + 2 * offset, col) && board[row + 2 * offset][col] == null)
-            moves.add(toPosition(row + 2 * offset, col));
+            if (isFirstMove && !outOfBounds(row + 2 * offset, col) && board[row + 2 * offset][col] == null)
+                moves.add(toPosition(row + 2 * offset, col));
         }
-        
+
         tryAddMove(row + offset, col + 1, chess, moves);
         tryAddMove(row + offset, col - 1, chess, moves);
 
@@ -52,15 +49,11 @@ public class Pawn extends Piece {
 
     /**
      * adds en passant position to moves if can en passant
-     * 
-     * @param row
-     *            row of Pawn
-     * @param col
-     *            column of Pawn
-     * @param chess
-     *            board
-     * @param moves
-     *            list of available moves
+     *
+     * @param row   row of Pawn
+     * @param col   column of Pawn
+     * @param chess board
+     * @param moves list of available moves
      */
     public void tryEnpassant(int row, int col, Chess chess, List<String> moves) {
         String target = chess.canBeEnpass;

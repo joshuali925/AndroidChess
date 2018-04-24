@@ -14,9 +14,15 @@ public class Chess {
     public Piece[][] copy;
     public String canBeEnpass, canBeEnBak;
     public String winner;
+    public String check;
     public char colorToMove;
     public char promotion;
     public boolean drawPrompt;
+    public char drawColor;
+
+    public Piece[][] undo = new Piece[8][8];
+    public boolean[][] lastIsFirstMove = new boolean[8][8];
+    public String lastCanBeEnpass = null;
 
     /**
      * Initialize fields
@@ -29,7 +35,10 @@ public class Chess {
         colorToMove = 'w';
         promotion = 0;
         drawPrompt = false;
+        drawColor = 0;
         winner = null;
+        check = null;
+        setup();
     }
 
     /**
@@ -40,6 +49,29 @@ public class Chess {
             for (int j = 0; j < board[0].length; j++)
                 board[i][j] = copy[i][j];
         canBeEnpass = canBeEnBak;
+    }
+
+    public void copyState() {
+        for (int i = board.length - 1; i >= 0; i--)
+            for (int j = 0; j < board[0].length; j++) {
+                undo[i][j] = board[i][j];
+                if (getPiece(i, j) != null)
+                    lastIsFirstMove[i][j] = getPiece(i, j).isFirstMove;
+            }
+        if (canBeEnpass != null)
+            lastCanBeEnpass = canBeEnpass;
+    }
+
+    public void undoMove() {
+        for (int i = board.length - 1; i >= 0; i--)
+            for (int j = 0; j < board[0].length; j++) {
+                board[i][j] = undo[i][j];
+                if (getPiece(i, j) != null)
+                    getPiece(i, j).isFirstMove = lastIsFirstMove[i][j];
+            }
+        colorToMove = toggleColor(colorToMove);
+        canBeEnpass = lastCanBeEnpass;
+        winner = null;
     }
 
     /**
@@ -78,11 +110,15 @@ public class Chess {
             Piece rook;
             switch (col) {
                 case 2:
+                    if (testing == false)
+                        copyState();
                     rook = getPiece(row, 0);
                     setPiece(row, 0, null);
                     setPiece(row, 3, rook);
                     break;
                 case 6:
+                    if (testing == false)
+                        copyState();
                     rook = getPiece(row, 7);
                     setPiece(row, 7, null);
                     setPiece(row, 5, rook);
@@ -99,6 +135,8 @@ public class Chess {
 
         if (curr instanceof Pawn)
             if (canPromote(curr.color, dst)) {
+                if (testing == false)
+                    copyState();
                 setPiece(src, null);
                 setPiece(dst, getPromotion(curr.color));
                 promote = true;
@@ -106,32 +144,44 @@ public class Chess {
                 canBeEnpass = dst;
                 setEnpassant = true;
             } else if (dst.charAt(0) != src.charAt(0) && getPiece(dst) == null) {
+                if (testing == false)
+                    copyState();
                 setPiece(canBeEnpass, null);
                 setPiece(src, null);
                 setPiece(dst, curr);
                 enpassant = true;
             }
-        if (setEnpassant == false)
+        if (setEnpassant == false) {
+            if (testing == false)
+                lastCanBeEnpass = canBeEnpass;
             canBeEnpass = null;
+        }
         if (!castled && !promote && !enpassant) {
+            if (testing == false)
+                copyState();
             setPiece(src, null);
             setPiece(dst, curr);
         }
 
         if (testing == false) {
             curr.isFirstMove = false;
-            drawPrompt = false;
+//            drawPrompt = false;
             colorToMove = toggleColor(colorToMove);
-            System.out.println("\n" + toString());
+//            System.out.println("\n" + toString());
 
             if (isCheck(toggleColor(curr.color))) {
                 if (isCheckmate(toggleColor(curr.color))) {
-                    System.out.println("Checkmate");
+//                    System.out.println("Checkmate");
                     winner = curr.color == 'w' ? "White" : "Black";
-                } else
-                    System.out.println("Check");
-            } else if (isStalemate(toggleColor(curr.color)))
+                } else {
+//                    System.out.println("Check");
+                    check = curr.color == 'w' ? "Black" : "White";
+                }
+            } else if (isStalemate(toggleColor(curr.color))) {
                 winner = "Stalemate";
+            } else {
+                check = null;
+            }
         }
         return true;
     }
@@ -165,6 +215,8 @@ public class Chess {
      * @return returns true if the piece can promote
      */
     public boolean canPromote(String src, String dst) {
+        if (src == null)
+            return false;
         Piece pawn = getPiece(src);
         if (pawn != null && pawn instanceof Pawn) {
             char color = pawn.color;
@@ -190,8 +242,27 @@ public class Chess {
             case 'R':
                 return new Rook(color);
             default:
-                return new Pawn(color);
+                return new Queen(color);
         }
+    }
+
+    /**
+     * @return returns {source position, dest position}, null if no move is possible
+     */
+    public String[] randomMove() {
+        List<String[]> allMoves = new ArrayList<String[]>();
+        for (int i = board.length - 1; i >= 0; i--)
+            for (int j = 0; j < board[0].length; j++) {
+                Piece curr = getPiece(i, j);
+                if (curr == null || curr.color != colorToMove)
+                    continue;
+                List<String> moves = getMoves(i, j);
+                if (moves.size() > 0)
+                    allMoves.add(new String[]{Piece.toPosition(i, j), moves.get((int) (Math.random() * moves.size()))});
+            }
+        if (allMoves.size() > 0)
+            return allMoves.get((int) (Math.random() * allMoves.size()));
+        return null;
     }
 
     /**
@@ -291,7 +362,7 @@ public class Chess {
 
         test.setup();
 
-        System.out.println(test);
+//        System.out.println(test);
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         // BufferedReader br = new BufferedReader(new BufferedReader(new FileReader(new
@@ -314,7 +385,7 @@ public class Chess {
             promotion = 0;
             String currColor = colorToMove == 'w' ? "White" : "Black";
             String enemyColor = colorToMove == 'w' ? "Black" : "White";
-            System.out.print(currColor + "'s move: ");
+//            System.out.print(currColor + "'s move: ");
             line = br.readLine();
             if (line == null)
                 break;
@@ -325,31 +396,36 @@ public class Chess {
                     winner = enemyColor;
                     break;
                 } else if (input[0].equalsIgnoreCase("draw") && drawPrompt) {
-                    System.out.println("Draw");
+//                    System.out.println("Draw");
                     return;
                 }
-                System.out.println("\nIllegal move, try again");
+//                System.out.println("\nIllegal move, try again");
             } else if (input.length == 2 && input[0].length() == 2 && input[1].length() == 2) {
-                if (move(input[0], input[1]) == false)
-                    System.out.println("\nIllegal move, try again");
+                if (move(input[0], input[1]) == false) {
+//                    System.out.println("\nIllegal move, try again");
+                }
             } else if (input.length == 3 && input[0].length() == 2 && input[1].length() == 2) {
                 if (input[2].equalsIgnoreCase("draw?")) {
                     if (move(input[0], input[1]) == false)
-                        System.out.println("\nIllegal move, try again");
-                    drawPrompt = true;
+//                        System.out.println("\nIllegal move, try again");
+                        drawPrompt = true;
                 } else if (input[2].length() == 1 && "QNBR".indexOf(input[2].toUpperCase()) >= 0) {
                     promotion = input[2].toUpperCase().charAt(0);
-                    if (move(input[0], input[1]) == false)
-                        System.out.println("\nIllegal move, try again");
-                } else
-                    System.out.println("\nIllegal move, try again");
-            } else
-                System.out.println("\nIllegal move, try again");
+                    if (move(input[0], input[1]) == false) {
+//                        System.out.println("\nIllegal move, try again");
+                    }
+                } else {
+//                    System.out.println("\nIllegal move, try again");
+                }
+            } else {
+//                System.out.println("\nIllegal move, try again");
+            }
         }
-        if (winner.equals("White") || winner.equals("Black"))
-            System.out.println(winner + " wins");
-        else if (winner != null)
-            System.out.println(winner);
+        if (winner.equals("White") || winner.equals("Black")) {
+//            System.out.println(winner + " wins");
+        } else if (winner != null) {
+//            System.out.println(winner);
+        }
     }
 
     /**
