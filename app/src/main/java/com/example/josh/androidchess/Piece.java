@@ -1,11 +1,12 @@
 package com.example.josh.androidchess;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @author Joshua Li, Dingbang Chen
  */
-public abstract class Piece {
+public abstract class Piece implements Serializable{
     public boolean isFirstMove;
     public char color;
     public char type;

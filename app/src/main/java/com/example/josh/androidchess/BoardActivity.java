@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
@@ -53,9 +54,11 @@ public class BoardActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_board);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         chess = new Chess();
         finished = false;
         initialize();
+
         try {
             FileInputStream fis = getApplicationContext().openFileInput("chess_data");
             ObjectInputStream is = new ObjectInputStream(fis);

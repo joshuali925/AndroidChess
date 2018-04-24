@@ -3,13 +3,14 @@ package com.example.josh.androidchess;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Joshua Li, Dingbang Chen
  */
-public class Chess {
+public class Chess implements Serializable{
     public Piece[][] board;
     public Piece[][] copy;
     public String canBeEnpass, canBeEnBak;
