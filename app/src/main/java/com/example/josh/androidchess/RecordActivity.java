@@ -22,7 +22,7 @@ public class RecordActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
-        listView = (ListView) findViewById(R.id.record_list);
+        listView = findViewById(R.id.record_list);
         instance = this;
 
         updateAdapter();
@@ -66,7 +66,7 @@ public class RecordActivity extends Activity {
     }
 
     protected void setButtons() {
-        sortByNameButton = (Button) findViewById(R.id.sortByNameButton);
+        sortByNameButton = findViewById(R.id.sortByNameButton);
         sortByNameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -75,7 +75,7 @@ public class RecordActivity extends Activity {
             }
         });
 
-        sortByDateButton = (Button) findViewById(R.id.sortByDateButton);
+        sortByDateButton = findViewById(R.id.sortByDateButton);
         sortByDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

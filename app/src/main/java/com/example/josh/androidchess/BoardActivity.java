@@ -74,7 +74,7 @@ public class BoardActivity extends Activity {
     }
 
     protected void setButtons() {
-        aiButton = (Button) findViewById(R.id.aiButton);
+        aiButton = findViewById(R.id.aiButton);
         aiButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -86,7 +86,7 @@ public class BoardActivity extends Activity {
             }
         });
 
-        drawButton = (Button) findViewById(R.id.drawButton);
+        drawButton = findViewById(R.id.drawButton);
         drawButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -111,7 +111,7 @@ public class BoardActivity extends Activity {
             }
         });
 
-        resignButton = (Button) findViewById(R.id.resignButton);
+        resignButton = findViewById(R.id.resignButton);
         resignButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,12 +129,13 @@ public class BoardActivity extends Activity {
             }
         });
 
-        undoButton = (Button) findViewById(R.id.undoButton);
+        undoButton = findViewById(R.id.undoButton);
         undoButton.setEnabled(false);
         undoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 finished = false;
+                previousSelected = null;
                 chess.undoMove();
                 updateBoard();
                 updateHighlight();
@@ -144,18 +145,16 @@ public class BoardActivity extends Activity {
 
                 undoButton.setEnabled(false);
                 redoButton.setEnabled(true);
-                if (chess.drawColor == chess.colorToMove)
-                    chess.drawPrompt = false;
-                String message = chess.drawPrompt ? "Confirm draw" : "Prompt draw";
-                drawButton.setText(message);
+                chess.drawPrompt = false;
+                drawButton.setText("Prompt draw");
                 statusText.setText((chess.colorToMove == 'w' ? "White" : "Black") + "'s move");
             }
         });
 
-        redoButton = (Button) findViewById(R.id.redoButton);
+        redoButton = findViewById(R.id.redoButton);
         resetRedoButton();
 
-        recordsButton = (Button) findViewById(R.id.recordsButton);
+        recordsButton = findViewById(R.id.recordsButton);
         recordsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -168,7 +167,7 @@ public class BoardActivity extends Activity {
             }
         });
 
-        restartButton = (Button) findViewById(R.id.restartButton);
+        restartButton = findViewById(R.id.restartButton);
         restartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -189,96 +188,18 @@ public class BoardActivity extends Activity {
         });
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            if (resultCode == RESULT_OK) {
-                if (!data.hasExtra("gameIndex"))
-                    return;
-                int index = data.getIntExtra("gameIndex", -1);
-                if (index != -1)
-                    startPlayback(SavedGames.gameList.get(index));
-            }
-        }
-    }
-
-    protected void startPlayback(SavedGames savedGames) {
-        aiButton.setEnabled(false);
-        drawButton.setEnabled(false);
-        undoButton.setEnabled(false);
-        resignButton.setEnabled(false);
-        chess = new Chess();
-        savedGames.index = 0;
-        updateBoard();
-        updateHighlight();
-        finished = true;
-        statusText.setText("White's move");
-        final SavedGames game = savedGames;
-
-        redoButton.setEnabled(true);
-        redoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String[] move = game.nextMove();
-                if (move == null) {
-                    resetRedoButton();
-                    return;
-                }
-                if (move.length == 3)
-                    chess.promotion = move[2].charAt(0);
-                if (move[0] != null && chess.move(move[0], move[1])) {
-                    updateHighlight(move[1], 'G');
-                    updateBoard();
-                }
-                statusText.setText((chess.colorToMove == 'w' ? "White" : "Black") + "'s move");
-                if (move.length == 4) {
-                    String message;
-                    if (move[3].length() == 5)
-                        message = "Resign, " + move[3] + " wins";
-                    else
-                        message = move[3];
-                    statusText.setText(message);
-                    resetRedoButton();
-                    return;
-                }
-                if (chess.winner != null) {
-                    String message = "Checkmate, " + chess.winner;
-                    if (chess.winner.length() == 5)
-                        message += " wins";
-                    statusText.setText(message);
-                    resetRedoButton();
-                }
-            }
-        });
-    }
-
-    protected void resetRedoButton() {
-        redoButton.setEnabled(false);
-        redoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (undoedMove == null)
-                    return;
-                if (undoedMove.length == 2)
-                    move(undoedMove[0], undoedMove[1]);
-                else if (undoedMove.length == 3)
-                    move(undoedMove[0], undoedMove[1], undoedMove[2]);
-            }
-        });
-    }
-
 
     /**
      * Creates new chess, initializes idMap and pieceView
      */
     protected void initialize() {
         setButtons();
-        statusText = (TextView) findViewById(R.id.statusText);
+        statusText = findViewById(R.id.statusText);
         statusText.setText("White's move");
 
         for (int i = 0; i < ids.length; i++)
             for (int j = 0; j < ids[0].length; j++) {
-                ImageView imageView = (ImageView) findViewById(ids[i][j]);
+                ImageView imageView = findViewById(ids[i][j]);
                 imageView.setClickable(true);
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -290,39 +211,6 @@ public class BoardActivity extends Activity {
                 pieceView[i][j] = imageView;
                 idMap.put(ids[i][j], Piece.toPosition(i, j));
             }
-    }
-
-    protected boolean move(String src, String dst) {
-        return move(src, dst, null);
-    }
-
-    protected boolean move(String src, String dst, String promotion) {
-        if (!chess.move(src, dst))
-            return false;
-        updateBoard();
-        updateHighlight(dst, 'G');
-        if (promotion == null)
-            savedMoves.add(new String[]{src, dst});
-        else
-            savedMoves.add(new String[]{src, dst, promotion});
-        undoButton.setEnabled(true);
-        undoedMove = null;
-        redoButton.setEnabled(false);
-        statusText.setText((chess.colorToMove == 'w' ? "White" : "Black") + "'s move");
-        checkIfFinished();
-        if (chess.drawPrompt) {
-            if (chess.drawColor == chess.colorToMove) { // draw refused
-                chess.drawPrompt = false;
-                drawButton.setText("Prompt draw");
-            } else {
-                String color = chess.drawColor == 'w' ? "White" : "Black";
-                Toast.makeText(BoardActivity.this, color + " prompts draw", Toast.LENGTH_SHORT).show();
-                drawButton.setText("Confirm draw");
-            }
-        }
-        if (chess.check != null)
-            Toast.makeText(BoardActivity.this, chess.check + " is in check", Toast.LENGTH_LONG).show();
-        return true;
     }
 
     protected void handleClick(int id) {
@@ -357,6 +245,39 @@ public class BoardActivity extends Activity {
         } else if (previousSelected == null || !move(previousSelected, pos))
             updateHighlight(pos, 'R');
         previousSelected = null;
+    }
+
+    protected boolean move(String src, String dst) {
+        return move(src, dst, null);
+    }
+
+    protected boolean move(String src, String dst, String promotion) {
+        if (!chess.move(src, dst))
+            return false;
+        updateBoard();
+        updateHighlight(dst, 'G');
+        if (promotion == null)
+            savedMoves.add(new String[]{src, dst});
+        else
+            savedMoves.add(new String[]{src, dst, promotion});
+        undoButton.setEnabled(true);
+        undoedMove = null;
+        redoButton.setEnabled(false);
+        statusText.setText((chess.colorToMove == 'w' ? "White" : "Black") + "'s move");
+        checkIfFinished();
+        if (chess.drawPrompt) {
+            if (chess.drawColor == chess.colorToMove) { // draw refused
+                chess.drawPrompt = false;
+                drawButton.setText("Prompt draw");
+            } else {
+                String color = chess.drawColor == 'w' ? "White" : "Black";
+                Toast.makeText(BoardActivity.this, color + " prompts draw", Toast.LENGTH_SHORT).show();
+                drawButton.setText("Confirm draw");
+            }
+        }
+        if (chess.check != null)
+            Toast.makeText(BoardActivity.this, chess.check + " is in check", Toast.LENGTH_LONG).show();
+        return true;
     }
 
     protected void checkIfFinished() {
@@ -438,6 +359,85 @@ public class BoardActivity extends Activity {
         else
             hex = row % 2 == col % 2 ? "#f58466" : "#f9a98e";
         pieceView[row][col].setBackgroundColor(Color.parseColor(hex));
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                if (!data.hasExtra("gameIndex"))
+                    return;
+                int index = data.getIntExtra("gameIndex", -1);
+                if (index != -1)
+                    startPlayback(SavedGames.gameList.get(index));
+            }
+        }
+    }
+
+    protected void startPlayback(SavedGames savedGames) {
+        aiButton.setEnabled(false);
+        drawButton.setEnabled(false);
+        undoButton.setEnabled(false);
+        resignButton.setEnabled(false);
+        chess = new Chess();
+        savedGames.index = 0;
+        updateBoard();
+        updateHighlight();
+        finished = true;
+        statusText.setText("White's move");
+        final SavedGames game = savedGames;
+
+        redoButton.setEnabled(true);
+        redoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String[] move = game.nextMove();
+                if (move == null) {
+                    resetRedoButton();
+                    return;
+                }
+                if (move.length == 3)
+                    chess.promotion = move[2].charAt(0);
+                if (move[0] != null && chess.move(move[0], move[1])) {
+                    updateHighlight(move[1], 'G');
+                    updateBoard();
+                }
+                statusText.setText((chess.colorToMove == 'w' ? "White" : "Black") + "'s move");
+                if (move.length == 4) {
+                    String message;
+                    if (move[3].length() == 5)
+                        message = "Resign, " + move[3] + " wins";
+                    else
+                        message = move[3];
+                    statusText.setText(message);
+                    resetRedoButton();
+                    return;
+                }
+                if (chess.winner != null) {
+                    String message = "Checkmate, " + chess.winner;
+                    if (chess.winner.length() == 5)
+                        message += " wins";
+                    statusText.setText(message);
+                    resetRedoButton();
+                }
+            }
+        });
+    }
+
+    protected void resetRedoButton() {
+        redoButton.setEnabled(false);
+        redoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (undoedMove == null)
+                    return;
+                previousSelected = null;
+                if (undoedMove.length >= 3 && undoedMove[2] != null)
+                    move(undoedMove[0], undoedMove[1], undoedMove[2]);
+                else
+                    move(undoedMove[0], undoedMove[1]);
+            }
+        });
     }
 
     protected void updateBoard() {
