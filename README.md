@@ -5,21 +5,16 @@ Android chess app with recording and playback. Chess rules and simple AI impleme
 Supports one level undo / redo, draw, resign and etc. 
 
 - Demo
-
-![board](https://github.com/joshuali925/AndroidChess/blob/master/img/start.png)
+<img src="https://github.com/joshuali925/AndroidChess/blob/master/img/start.png" width="223" height="334">
 
 - Castle
 
-![castle](https://github.com/joshuali925/AndroidChess/blob/master/img/castle.png)
-
-![castle_2](https://github.com/joshuali925/AndroidChess/blob/master/img/castle_2.png)
+<img src="https://github.com/joshuali925/AndroidChess/blob/master/img/castle.png" width="223" height="334">   <img src="https://github.com/joshuali925/AndroidChess/blob/master/img/castle_2.png" width="223" height="334">
 
 - En passant
 
-![en_passant](https://github.com/joshuali925/AndroidChess/blob/master/img/en_passant.png)
+<img src="https://github.com/joshuali925/AndroidChess/blob/master/img/en_passant.png" width="223" height="334">
 
 - Check and checkmate detection
 
-![check](https://github.com/joshuali925/AndroidChess/blob/master/img/check.png)
-
-![checkmate](https://github.com/joshuali925/AndroidChess/blob/master/img/checkmate.png)
+<img src="https://github.com/joshuali925/AndroidChess/blob/master/img/check.png" width="223" height="334">   <img src="https://github.com/joshuali925/AndroidChess/blob/master/img/checkmate.png" width="223" height="334">
